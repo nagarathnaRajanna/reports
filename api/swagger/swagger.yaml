@@ -1,0 +1,329 @@
+swagger: "2.0"
+info:
+  version: "0.0.1"
+  title: Reports
+# during dev, should point to your local machine
+host: localhost:10040
+# basePath prefixes all resource paths 
+basePath: /reports
+# 
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+paths:
+  '/v1/template/':
+    x-swagger-router-controller: controller
+    get:
+      description: Retrive a list of available Products
+      operationId: v1_fetchTemplate
+      parameters:
+        - name: page
+          in: query
+          type: integer
+          description: Page number of the request
+        - name: count
+          in: query
+          type: integer
+          description: Number of brands per page
+        - name: filter
+          in: query
+          type: string
+      responses:
+        200:
+          description: List of the entites
+        400:
+          description: Bad parameters
+        404:
+          description: No products to list with the given parameter set.
+        500:
+          description: Internal server error
+    post: 
+      description: creates the Template
+      consumes:
+        - multipart/form-data
+      operationId: v1_templateCreate
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref : "#/definitions/templateDefinition"
+      responses:
+        201:
+          description: Success
+          schema:
+            $ref: "#/definitions/TempllateResponse"
+        400:
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  '/v1/template/count':
+    x-swagger-router-controller:  controller
+    get:
+      operationId:  v1_count
+      parameters:
+        - name:  filter
+          in: query
+          type: string
+          description:  Count the number of fields after applying certain parameters
+      responses:
+        200:
+          description:  sucess
+          schema:
+            type: string
+        400:
+          description:  Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  '/v1/template/report/{id}':
+    x-swagger-router-controller: controller
+    get:
+      operationId: v1_getTemplateById
+      parameters:
+        - name: id
+          in: path
+          type: string
+          description: ID of the Template
+          required: true
+      responses:
+        200:
+          description: Success
+          schema:
+            type: string
+        400:
+          description: Bad Request
+        404 :
+          description: Template Not found
+    put:
+      operationId: v1_updateTemplate
+      parameters:
+        - name: id
+          in: path
+          type: string
+          description: ID of the Template
+          required: true
+        - name: data
+          in: body
+          description: Data requiring update
+          required: true
+          schema:
+            $ref: "#/definitions/templateDefinition"
+      responses:
+        200:
+          description: Success
+          schema:
+            type: string
+        400:
+          description: Bad Request
+          schema:
+            type: string
+        404 :
+          description: Template Not found 
+          schema:
+            type: string 
+    delete :
+      operationId: v1_templateDelete
+      parameters:
+        - name: id
+          in: path
+          type: string
+          description: ID of the Template
+          required: true
+      responses:
+        200:
+          description: Success
+          schema:
+            type: string
+        400:
+          description: Bad Request
+        404 :
+          description: Template Not found   
+  '/v1/template/reportsdownload/{templateId}':
+    x-swagger-router-controller: controller
+    post:
+      operationId: v1_reportdownload
+      parameters:
+        - name: templateId
+          in: path
+          type: string
+          description: downloads the reports for the particular template
+          required: true
+        - name: data
+          in: query
+          type : string
+        # - name: querydata
+        #   in: body
+        #   required: true
+        #   schema:
+        #     type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            type: string
+        400:
+          description: Bad parameters
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        404:
+          description: Coudnt locate the product
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        500:
+          description: Internal server error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  '/v1/template/reportLogs':
+    x-swagger-router-controller: controller
+    get:
+      description: Retrive a list of available Products
+      operationId: v1_getReportLogs
+      parameters:
+        - name: page
+          in: query
+          type: integer
+          description: Page number of the request
+        - name: count
+          in: query
+          type: integer
+          description: Number of brands per page
+        - name: filter
+          in: query
+          type: string
+      responses:
+        200:
+          description: List of the entites
+        400:
+          description: Bad parameters
+        404:
+          description: No products to list with the given parameter set.
+        500:
+          description: Internal server error
+  '/v1/template/reportLogs/count':
+    x-swagger-router-controller:  controller
+    get:
+      operationId:  v1_getReportLogsCount
+      parameters:
+        - name:  filter
+          in: query
+          type: string
+          description:  Count the number of fields after applying certain parameters
+      responses:
+        200:
+          description:  sucess
+          schema:
+            type: string
+        400:
+          description:  Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /swagger:
+    x-swagger-pipe: swagger_raw
+# complex objects have schema definitions
+definitions:
+  TempllateResponse:
+    properties:
+      message:
+        type: string
+  templateDefinition:
+    properties:
+      templateName:     { type: string , maxLength: 1024}
+      templateDescription:  { type: string , maxLength: 1024}
+      outputType :  
+         type: string
+         enum :
+         - csv
+         - xml
+         - json
+         - xls
+      templateType:
+         type : string
+         enum :
+         - export
+         - import
+      header :
+        type : object
+        properties :
+          rowFrom : { type: number }
+          columnStart : { type: number }
+          text : { type: string}
+      body :
+        type : object
+        properties :
+          rowFrom : { type: number }
+          columnStart : { type: number }
+          text : { type: string}
+      footer :
+        type : object
+        properties :
+          rowFrom : { type: number }
+          columnStart : { type: number }
+          text : { type: string}
+      collectionName :
+         type: string
+      inputFilters:
+        type: array
+        items:
+            $ref: "#/definitions/inputfilterdefinition"
+      fieldDefinition :
+         type: array
+         items:
+             $ref: "#/definitions/fieldDefinition"
+  fieldDefinition :
+    properties:
+      name :  { type : string} 
+      type :  
+        type : string
+        enum :
+        - String
+        - Number
+        - Boolean
+        - Date
+        - DateTime
+      column :  { type : string} 
+      min  :  { type : string} 
+      isPrimaryKey :  { type : string} 
+      isGrouped : { type: boolean }
+      operation : { type: string }
+      format: { type: string }
+      isQueryBased : { type: boolean }
+      queryFrom :
+        type : string
+        enum :
+        - mongo
+        - Elastic
+      environment :
+        type : string
+        enum :
+        - archive
+        - production
+  inputfilterdefinition :
+    properties :
+      name :  { type : string}
+      type :  
+        type : string
+        enum :
+        - Date
+        - DateRangeTime
+        - DateTime
+        - Text
+        - Textarea
+        - Select
+        - SelectMulti
+        - String
+        - Number
+      column : { type: string}
+      value : { type: string}
+  ErrorResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
